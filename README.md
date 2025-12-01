@@ -1,4 +1,4 @@
-![FirstQuantization](./img/1_fq.png)
+![FirstQuantization](./img/0_fq.png)
 
 # FirstQuantization
 你的第一个量化实例，大模型量化入门案例，量化之旅从这里开始。
