@@ -1,4 +1,4 @@
-![FirstQuantization](./img/fq.png)
+![FirstQuantization](./img/1_fq.png)
 
 # FirstQuantization
 你的第一个量化实例，大模型量化入门案例，量化之旅从这里开始。
@@ -10,7 +10,7 @@ __基于conda+jupyter，推荐使用vscode进行学习。__
 主要包含以下内容：
 
 0. 大模型量化 
-1. 数据结构
+1. 数据类型
 2. 对称量化
 3. 非对称量化
 4. W8A16量化
