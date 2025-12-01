@@ -1,4 +1,6 @@
-# First Quantization
+![FirstQuantization](./img/fq.png)
+
+# FirstQuantization
 你的第一个量化实例，大模型量化入门案例，量化之旅从这里开始。
 
 ## 课程介绍
