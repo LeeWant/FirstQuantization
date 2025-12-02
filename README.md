@@ -46,6 +46,9 @@ git clone https://github.com/LeeWant/FirstQuantization.git
 conda create -n fquant python=3.10  
 conda activate fquant  
 
+# 进入目录
+cd FirstQuantization
+
 # 安装依赖
 pip install -r requirement.txt
 ```
