@@ -69,3 +69,7 @@ pip install -r requirement.txt
 
 ## CONTACT ME
 WeChat：Lee_SayHi
+
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
