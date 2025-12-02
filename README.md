@@ -14,14 +14,14 @@
 本教程将带你走进大模型量化的世界，内容涵盖量化的核心概念与实际应用，助你逐步掌握这一前沿技术。
 
 ### **已更新的课程内容：**  
-1. [大模型量化简介](https://www.bilibili.com/video/BV1E6UdBVEeS)（作者自制视频，持续更新中……）  
-2. [数据类型介绍](1_data_type.ipynb)  
-3. [对称量化](2_symmetric_quantization.ipynb)  
-4. [非对称量化](3_asymmetric_quantization.ipynb)  
-5. [量化工具封装](4_tool_function.ipynb)  
-6. [线性层量化](5_linear_quantization.ipynb)  
-7. [【案例 1】语言模型量化](6_llm_demo.ipynb)  
-8. [【案例 2】目标识别模型量化](7_target_demo.ipynb)  
+0. [大模型量化简介](https://www.bilibili.com/video/BV1E6UdBVEeS)（作者自制视频，持续更新中……）  
+1. [数据类型介绍](1_data_type.ipynb)  
+2. [对称量化](2_symmetric_quantization.ipynb)  
+3. [非对称量化](3_asymmetric_quantization.ipynb)  
+4. [量化工具封装](4_tool_function.ipynb)  
+5. [线性层量化](5_linear_quantization.ipynb)  
+6. [【案例 1】语言模型量化](6_llm_demo.ipynb)  
+7. [【案例 2】目标识别模型量化](7_target_demo.ipynb)  
 
 ### **后期更新计划**  
 课程内容将在未来版本中进一步扩展与优化，包括但不限于：
