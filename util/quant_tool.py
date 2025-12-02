@@ -1,5 +1,8 @@
 import torch
 from dataclasses import dataclass
+from typing import Optional, List
+import torch.nn as nn
+import torch.nn.functional as F
 
 # 定义一个QuantizationParams类用于保存量化过程中的参数
 @dataclass
@@ -129,3 +132,111 @@ def quantize_dequant(
     # 反量化
     x_hat = dequantize_tensor(q, qparams)
     return q, x_hat, qparams
+
+
+
+# 定义权重量化模块（per-channel 对称 int8 量化）
+class QuantLinear(nn.Module):
+    """
+    简化版的权重量化线性层：
+    - 只量化 weight（symmetric per-channel int8）
+    - bias 保持 FP32
+    - 前向时：先临时反量化，再用 F.linear
+    """
+    def __init__(self, in_features: int, out_features: int, bias: bool = True,dtype=torch.float32):
+        super().__init__()
+
+
+        # # qweight: int8，形状 [out_features, in_features]
+        self.register_buffer(
+            "qweight",
+            torch.empty(out_features, in_features, dtype=torch.int8),
+        )
+        # scale: per-output-channel，形状 [out_features, 1]
+        self.register_buffer(
+            "scale",
+            torch.ones(out_features, 1, dtype=dtype),
+        )
+        # 对称量化 zero_point 固定 0，这里留个占位方便扩展
+        self.register_buffer(
+            "zero_point",
+            torch.zeros(out_features, 1, dtype=dtype),
+        )
+        
+        if bias:
+            self.register_buffer("bias", 
+                                 torch.randn((1, out_features), 
+                                             dtype=dtype))
+        else:
+            self.bias = None
+
+    @classmethod
+    def from_linear(cls, linear: nn.Linear, per_channel: bool=False, is_symmetric: bool=True,dtype=torch.float32,channel_dim=0) -> "QuantLinear":
+        """
+        给定一个 nn.Linear，构造对应的 QuantLinear 并完成权重量化。
+        """
+        qlinear = cls(
+            in_features=linear.in_features,
+            out_features=linear.out_features,
+            bias=linear.bias is not None,
+            dtype=dtype
+        )
+
+        with torch.no_grad():
+            # 获取线性层的权重
+            weight = linear.weight
+            if is_symmetric:
+                # 对线性层进行对称量化
+                qparams = get_symmetric_qparams(weight,per_channel,channel_dim)
+                qweight = quantize_tensor(weight,qparams)
+            else:
+                # 对线性层进行非对称量化
+                qparams = get_asymmetric_qparams(weight,per_channel,channel_dim)
+                qweight = quantize_tensor(weight,qparams)
+
+            # 储存缩放信息
+            qlinear.qweight = qweight
+            qlinear.scale = qparams.scale
+            qlinear.zero_point = qparams.zero_point
+
+            # 对偏置项不做处理
+            if linear.bias is not None:
+                qlinear.bias = linear.bias
+        return qlinear
+
+    # 前向传播的时候需要进行反量化
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
+        
+        # 反量化得到近似权重：w_hat = (q - z) * scale
+        # qweight: [out, in], scale: [out, 1]
+        w_hat = self.qweight.to(x.dtype)
+        output = F.linear(x, w_hat) * self.scale
+        if self.bias is not None:
+            output = output + self.bias
+        return output
+    
+
+# 对权重进行量化
+def quantize_model_weights(
+    model: nn.Module,
+    per_channel:bool=False,
+    is_symmetric:bool=True,
+    channel_dim:int=0,
+    modules_to_exclude: Optional[List[str]] = None,  # 可选参数，排除不需要量化的层
+) -> nn.Module:
+    """
+    递归遍历模型，遇到 nn.Linear 就替换成 QuantLinear（权重量化）。
+    可以通过 modules_to_exclude 按模块名排除不想量化的层。
+    """
+    if modules_to_exclude is None:
+        modules_to_exclude = []
+
+    for name, child in list(model.named_children()):
+        full_name = name
+
+        if isinstance(child, nn.Linear) and full_name not in modules_to_exclude:
+            setattr(model, name, QuantLinear.from_linear(child,per_channel=per_channel,is_symmetric=is_symmetric,dtype=child.weight.dtype,channel_dim=channel_dim))
+        else:
+            quantize_model_weights(child,per_channel,is_symmetric,modules_to_exclude=modules_to_exclude)
+    return model
